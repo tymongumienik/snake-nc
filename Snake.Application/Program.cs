@@ -16,9 +16,40 @@ internal class Program
             userName: "hello"
         ));
 
-        Console.WriteLine(game.Render());
+        Console.CursorVisible = false;
 
-        manager.EndGame(game.Id);
+        // TODO: one Render too much when going into wall
+        while (game.Active)
+        {
+            if (Console.KeyAvailable)
+            {
+                var key = Console.ReadKey(intercept: true).Key;
+                MoveDirection? move = key switch
+                {
+                    ConsoleKey.W or ConsoleKey.UpArrow => MoveDirection.Up,
+                    ConsoleKey.S or ConsoleKey.DownArrow => MoveDirection.Down,
+                    ConsoleKey.A or ConsoleKey.LeftArrow => MoveDirection.Left,
+                    ConsoleKey.D or ConsoleKey.RightArrow => MoveDirection.Right,
+                    _ => null
+                };
+
+                game.Tick(move);
+            }
+            else
+            {
+                game.Tick();
+            }
+
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine(game.Render());
+            Console.WriteLine($"Score: {game.Score}");
+
+            Thread.Sleep(200);
+        }
+
+
+        Console.WriteLine(game.HasWon ? "You win!" : "Game over :(");
     }
 }
 

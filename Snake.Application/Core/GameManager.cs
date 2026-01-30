@@ -6,11 +6,10 @@ namespace Snake.Application.Core;
 public class GameManager(IDataRepository repository)
 {
     private readonly Dictionary<Guid, GameInstance> _activeGames = [];
-    private readonly Random _random = new();
 
     public GameInstance StartNewGame(GameConfig config)
     {
-        var game = new GameInstance(config, _random);
+        var game = new GameInstance(config, Random.Shared);
         _activeGames[game.Id] = game;
         game.GameOver += (game) => EndGame(game.Id);
         return game;
@@ -26,12 +25,8 @@ public class GameManager(IDataRepository repository)
     {
         if (_activeGames.TryGetValue(gameId, out var game))
         {
-            game.Active = false;
-            var result = new GameResult
-            {
-                Score = game.Score,
-                UserName = game.Config.UserName,
-            };
+            // Active is set is ended by GameInstance, no need to worry here
+            var result = new GameResult(game.Score, game.Config.UserName);
             repository.SaveGameResult(result);
             _activeGames.Remove(gameId);
         }

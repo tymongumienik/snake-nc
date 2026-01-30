@@ -13,7 +13,7 @@ public static class GameCellExtensions
     {
         return cell switch
         {
-            GameCell.Empty => "⏹",
+            GameCell.Empty => "⬜",
             GameCell.Snake => "🟩",
             GameCell.Food => "🍎",
             _ => throw new NotImplementedException(),
