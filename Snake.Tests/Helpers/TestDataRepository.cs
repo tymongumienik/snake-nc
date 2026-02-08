@@ -3,7 +3,7 @@ using Snake.Application.Repositories;
 
 namespace Snake.Tests.Helpers
 {
-    public class TestDataRepository : IDataRepository
+    public sealed class TestDataRepository : IDataRepository
     {
         public List<GameResult> SavedResults { get; } = [];
 

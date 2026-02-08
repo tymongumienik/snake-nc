@@ -2,7 +2,7 @@ using Snake.Application.Models;
 
 namespace Snake.Application.Repositories;
 
-public class MockDataRepository : IDataRepository
+public sealed class MockDataRepository : IDataRepository
 {
     public void SaveGameResult(GameResult result)
     {
