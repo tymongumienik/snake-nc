@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,17 +8,11 @@ namespace Snake.Application;
 
 // inspired by https://medium.com/@jm.keuleyan/c-tcp-communications-building-a-client-server-chat-a2155d585191
 // made async because learn.microsoft.com says so
+
+// TODO: better input reading (currently buggy due to lack of move queueing)
 public class TcpServer(GameManager manager)
 {
     private readonly GameManager _manager = manager;
-
-    private static class MagicBytes
-    {
-        public static byte[] SNAKE_ART = [0x1B, 0x5B, 0x33, 0x38, 0x3B, 0x35, 0x3B, 0x39, 0x33, 0x6D, 0x1B, 0x5B, 0x31, 0x6D, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x5E, 0x5C, 0x2F, 0x5E, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x7C, 0x5F, 0x5F, 0x7C, 0x20, 0x20, 0x4F, 0x7C, 0x0D, 0x0A, 0x5C, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x5F, 0x2F, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x5C, 0x5F, 0x5F, 0x5F, 0x5F, 0x7C, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x2F, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x60, 0x5C, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7C, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7C, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x2D, 0x2D, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x20, 0x20, 0x20, 0x5C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7C, 0x20, 0x20, 0x20, 0x7C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2F, 0x20, 0x20, 0x20, 0x7C, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5C, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x5F, 0x5F, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x2F, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x5F, 0x2D, 0x7E, 0x0D, 0x0A, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x2D, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x5F, 0x2D, 0x7E, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x7E, 0x2D, 0x5F, 0x5F, 0x5F, 0x2D, 0x7E, 0x0D, 0x0A, 0x1B, 0x5B, 0x30, 0x6D];
-        public static byte[] CLEAR_SCREEN = [27, 91, 50, 74];
-        public static byte[] RESET_CURSOR = [27, 91, 72];
-        public static byte[] CLEAR_SCREEN_AND_RESET_CURSOR = [.. CLEAR_SCREEN, .. RESET_CURSOR];
-    }
 
     private enum ConnectionStage
     {
@@ -41,6 +34,8 @@ public class TcpServer(GameManager manager)
             try
             {
                 var client = await listener.AcceptTcpClientAsync();
+                client.NoDelay = true;
+
                 Console.WriteLine("Client connected!");
 
                 _ = HandleClientAsync(client);
@@ -58,24 +53,90 @@ public class TcpServer(GameManager manager)
         var buffer = new byte[1024];
         var stage = ConnectionStage.EnteringName;
 
+        // Game configuration
+        string username = string.Empty;
+        uint gridSize = 8;
+        GameConfig? gameConfig = null;
+
+        // Game state
+        GameInstance? gameInstance = null;
+        object? pendingDirection = null;
+
         async Task sendByteArray(byte[] bytes) => await stream.WriteAsync(bytes, 0, bytes.Length);
         async Task sendString(string s) => await sendByteArray(Encoding.UTF8.GetBytes(s));
 
-        string username = string.Empty;
-        uint gridSize = 8;
+        CancellationTokenSource? cancellation = null;
+
+        async Task EndGame()
+        {
+            if (gameInstance is null) return;
+            cancellation?.Cancel();
+            _ = Interlocked.Exchange(ref pendingDirection, null);
+            _manager.EndGame(gameInstance.Id);
+            stage = ConnectionStage.GameEnded;
+        }
+
+        async Task StartNewGame()
+        {
+            if (gameConfig is null) return;
+            await EndGame();
+
+            gameInstance = _manager.StartNewGame((GameConfig)gameConfig);
+            gameInstance.GameOver += async (e) => { await EndGame(); };
+
+            cancellation = new CancellationTokenSource();
+
+            stage = ConnectionStage.Playing;
+
+            // Movement thread (WASD/arrow keys)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    while (stage == ConnectionStage.Playing && client.Connected && !cancellation.IsCancellationRequested)
+                    {
+                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cancellation.Token);
+                        if (bytesRead == 0) break; // client disconnected
+
+                        var slice = buffer[..bytesRead];
+
+                        MoveDirection? dir = slice switch
+                        {
+                            [(byte)'W' or (byte)'w'] or [0x1B, 0x5B, 0x41] => MoveDirection.Up,
+                            [(byte)'S' or (byte)'s'] or [0x1B, 0x5B, 0x42] => MoveDirection.Down,
+                            [(byte)'A' or (byte)'a'] or [0x1B, 0x5B, 0x44] => MoveDirection.Left,
+                            [(byte)'D' or (byte)'d'] or [0x1B, 0x5B, 0x43] => MoveDirection.Right,
+                            _ => null
+                        };
+
+                        if (dir is not null)
+                        {
+                            Interlocked.Exchange(ref pendingDirection, dir);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { }
+            });
+        }
 
         async Task SendScreen()
         {
-            await sendByteArray(MagicBytes.CLEAR_SCREEN_AND_RESET_CURSOR);
+            await sendByteArray(TcpMagicBytes.CLEAR_SCREEN_AND_RESET_CURSOR);
             switch (stage)
             {
                 case ConnectionStage.EnteringName:
-                    await sendByteArray(MagicBytes.SNAKE_ART);
+                    await sendByteArray(TcpMagicBytes.SNAKE_ART);
                     await sendString($"\r\nPlease enter your name: {username}\r\nPress enter to confirm");
                     break;
                 case ConnectionStage.ConfiguringGridSize:
-                    await sendByteArray(MagicBytes.SNAKE_ART);
+                    await sendByteArray(TcpMagicBytes.SNAKE_ART);
                     await sendString($"\r\nThe current grid size is {gridSize}\r\nUse W and S keys to adjust the size\r\nPress enter to start the game");
+                    break;
+                case ConnectionStage.Playing when gameInstance is not null:
+                    await sendString(gameInstance.Render() + $"\r\nScore: {gameInstance.Score}\r\nPress WASD or arrow keys to move");
+                    break;
+                case ConnectionStage.GameEnded when gameInstance is not null:
+                    await sendString($"Game over!\r\nScore: {gameInstance.Score}\r\nPress 1 to replay with the same settings\r\nPress 2 to go back to configuration screen");
                     break;
             }
         }
@@ -86,70 +147,86 @@ public class TcpServer(GameManager manager)
 
             while (true)
             {
-                int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                if (bytesRead == 0)
+                if (stage != ConnectionStage.Playing)
                 {
-                    Console.WriteLine("Client disconnected.");
-                    break;
+                    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    if (bytesRead == 0)
+                    {
+                        Console.WriteLine("Client disconnected.");
+                        break;
+                    }
+
+                    var slice = buffer[..bytesRead];
+
+                    switch (stage)
+                    {
+                        case ConnectionStage.EnteringName:
+                            // Backspace
+                            if (slice is [0x7F])
+                            {
+                                username = string.IsNullOrEmpty(username) ? username : username[..^1];
+                            }
+                            // Enter
+                            else if (slice is [0x0D])
+                            {
+                                if (GameConfig.IsValidUserName(username))
+                                {
+                                    stage = ConnectionStage.ConfiguringGridSize;
+                                }
+                            }
+                            // Letter
+                            else if (Ascii.IsValid(slice))
+                            {
+                                string newUsername = username + Encoding.UTF8.GetString(slice);
+                                if (GameConfig.IsValidUserName(newUsername))
+                                {
+                                    username = newUsername;
+                                }
+                            }
+                            break;
+                        case ConnectionStage.ConfiguringGridSize:
+                            // W
+                            if (slice is [0x57] or [0x77])
+                            {
+                                if (GameConfig.IsValidGridSize(gridSize + 1))
+                                {
+                                    ++gridSize;
+                                }
+                            }
+                            // S
+                            else if (slice is [0x53] or [0x73])
+                            {
+                                if (GameConfig.IsValidGridSize(gridSize - 1))
+                                {
+                                    --gridSize;
+                                }
+                            }
+                            // Enter
+                            else if (slice is [0x0D])
+                            {
+                                gameConfig = new GameConfig(
+                                    gridSize: gridSize,
+                                    userName: username
+                                );
+                                await StartNewGame();
+                            }
+                            break;
+                        case ConnectionStage.GameEnded:
+                            if (slice is [0x31])
+                            {
+                                await StartNewGame();
+                            }
+                            else if (slice is [0x32])
+                            {
+                                stage = ConnectionStage.EnteringName;
+                            }
+                            break;
+                    }
                 }
-
-                var slice = buffer[..bytesRead];
-
-                switch (stage)
+                else if (gameInstance is not null)
                 {
-                    case ConnectionStage.EnteringName:
-                        // Backspace
-                        if (slice.SequenceEqual("\x7F"u8))
-                        {
-                            username = string.IsNullOrEmpty(username) ? username : username[..^1];
-                        }
-                        // Enter
-                        else if (slice.SequenceEqual("\r"u8))
-                        {
-                            if (GameConfig.IsValidUserName(username))
-                            {
-                                stage = ConnectionStage.ConfiguringGridSize;
-                            }
-                        }
-                        // Letter
-                        else if (Ascii.IsValid(slice))
-                        {
-                            string newUsername = username + Encoding.UTF8.GetString(slice);
-                            if (GameConfig.IsValidUserName(newUsername))
-                            {
-                                username = newUsername;
-                            }
-                        }
-                        break;
-                    case ConnectionStage.ConfiguringGridSize:
-                        // W
-                        if (slice.SequenceEqual("W"u8) || slice.SequenceEqual("w"u8))
-                        {
-                            if (GameConfig.IsValidGridSize(gridSize + 1))
-                            {
-                                ++gridSize;
-                            }
-                        }
-                        // S
-                        else if (slice.SequenceEqual("S"u8) || slice.SequenceEqual("s"u8))
-                        {
-                            if (GameConfig.IsValidGridSize(gridSize - 1))
-                            {
-                                --gridSize;
-                            }
-                        }
-                        // Enter
-                        else if (slice.SequenceEqual("\r"u8))
-                        {
-                            stage = ConnectionStage.Playing;
-                        }
-                        break;
-                    case ConnectionStage.Playing:
-                        // TODO: impl
-                        break;
-                    case ConnectionStage.GameEnded:
-                        // TODO: impl
-                        break;
+                    await Task.Delay(200);
+                    gameInstance.Tick((MoveDirection?)Interlocked.Exchange(ref pendingDirection, null));
                 }
 
                 await SendScreen();
@@ -161,6 +238,7 @@ public class TcpServer(GameManager manager)
         }
         finally
         {
+            await EndGame();
             client.Close();
         }
     }
