@@ -1,4 +1,3 @@
-using System.Text;
 using Snake.Application.Models;
 
 namespace Snake.Application.Core;
@@ -29,11 +28,9 @@ public class GameInstance
         RandomizeFoodLocation();
     }
 
-    private HashSet<Coordinate> ComputeSnakeCells() => [.. Body];
-
     private void RandomizeFoodLocation()
     {
-        var snakeCells = ComputeSnakeCells();
+        var snakeCells = new HashSet<Coordinate>(Body);
         var cells = (from x in Enumerable.Range(0, (int)Config.GridSize)
                      from y in Enumerable.Range(0, (int)Config.GridSize)
                      where !snakeCells.Contains((x, y))
@@ -42,10 +39,7 @@ public class GameInstance
 
         if (cells.Count == 0)
         {
-            // you win!
-            HasWon = true;
-            Active = false;
-            GameOver?.Invoke(this);
+            EndGame(true);
             return;
         }
 
@@ -53,9 +47,10 @@ public class GameInstance
         FoodLocation = cells[index];
     }
 
-    private void EndGame()
+    private void EndGame(bool won = false)
     {
         Active = false;
+        HasWon = won;
         GameOver?.Invoke(this);
     }
 
@@ -66,7 +61,6 @@ public class GameInstance
 
         var head = Body.First.Value;
 
-        // head collision with wall or self (RIP)
         if (IsHeadInvalid(head))
         {
             EndGame();
@@ -82,17 +76,13 @@ public class GameInstance
     {
         if (!Active) return;
 
-        // can't move left when going right etc.
-        // also using _move variable because LSP & compiler is too stupid for (move is not null) check
         if (move is MoveDirection _move && Direction.ContrastingDirection() != _move)
         {
             Direction = _move;
         }
 
-        // should never happen (hopefully)
         if (Body.First is null) return;
 
-        // do the move
         var (dx, dy) = Direction.ToMovementDelta();
         var (headX, headY) = Body.First.Value;
         var newHead = (headX + dx, headY + dy);
@@ -103,10 +93,8 @@ public class GameInstance
             return;
         }
 
-        // insert head at beginning (snake logic)
         Body.AddFirst(newHead);
 
-        // eating food
         if (newHead == FoodLocation)
         {
             ++Score;
@@ -114,33 +102,9 @@ public class GameInstance
         }
         else
         {
-            // remove tail if no food eaten (since we added a new head, this keeps the same length)
             Body.RemoveLast();
         }
 
         EndGameIfInvalid();
-    }
-
-    public string Render()
-    {
-        var snakeCells = ComputeSnakeCells();
-        var sb = new StringBuilder();
-
-        // reversed x and y (otherwise we get rotated 90 degrees :()
-        for (int y = 0; y < Config.GridSize; y++)
-        {
-            for (int x = 0; x < Config.GridSize; x++)
-            {
-                if (snakeCells.Contains((x, y)))
-                    sb.Append(GameCell.Snake.ToSymbol());
-                else if (FoodLocation == (x, y))
-                    sb.Append(GameCell.Food.ToSymbol());
-                else
-                    sb.Append(GameCell.Empty.ToSymbol());
-            }
-            sb.Append("\r\n"); // required by TCP socket
-        }
-
-        return sb.ToString().TrimEnd();
     }
 }

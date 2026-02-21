@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Snake.Application\Snake.Application.csproj" />
+    <ProjectReference Include="..\Snake.Infrastructure\Snake.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -27,7 +27,7 @@ public class GameManager(IDataRepository repository)
         {
             game.Active = false;
             var result = new GameResult(game.Score, game.Config.UserName);
-            repository.SaveGameResult(result);
+            _ = repository.SaveGameResultAsync(result);
             _activeGames.Remove(gameId);
         }
     }

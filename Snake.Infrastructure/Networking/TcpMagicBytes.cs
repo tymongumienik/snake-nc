@@ -1,4 +1,4 @@
-namespace Snake.Application.Core;
+namespace Snake.Infrastructure.Networking;
 
 public static class TcpMagicBytes
 {

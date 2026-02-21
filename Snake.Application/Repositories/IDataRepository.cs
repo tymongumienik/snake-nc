@@ -4,5 +4,6 @@ namespace Snake.Application.Repositories;
 
 public interface IDataRepository
 {
-    void SaveGameResult(GameResult progress);
+    Task SaveGameResultAsync(GameResult result);
+    Task<IEnumerable<GameResult>> GetTopScoresAsync(int count);
 }

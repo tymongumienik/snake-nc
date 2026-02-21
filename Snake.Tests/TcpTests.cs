@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 using Snake.Application;
 using Snake.Application.Core;
+using Snake.Infrastructure.Networking;
 using Snake.Tests.Helpers;
 
 namespace Snake.Tests;

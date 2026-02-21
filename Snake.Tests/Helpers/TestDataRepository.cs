@@ -7,9 +7,15 @@ namespace Snake.Tests.Helpers
     {
         public List<GameResult> SavedResults { get; } = [];
 
-        public void SaveGameResult(GameResult result)
+        public Task SaveGameResultAsync(GameResult result)
         {
             SavedResults.Add(result);
+            return Task.CompletedTask;
+        }
+
+        public Task<IEnumerable<GameResult>> GetTopScoresAsync(int count)
+        {
+            return Task.FromResult(SavedResults.OrderByDescending(r => r.Score).Take(count));
         }
     }
 }

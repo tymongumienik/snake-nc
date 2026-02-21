@@ -1,5 +1,6 @@
 ﻿using Snake.Application.Core;
 using Snake.Application.Models;
+using Snake.Application.Rendering;
 using System.Globalization;
 
 namespace Snake.Tests;
@@ -10,11 +11,10 @@ public class GameInstanceTests
     public void Render_ReturnsCorrectCellCount()
     {
         var game = new GameInstance(new GameConfig(8, "Player1"), new Random(42));
-        var rendered = game.Render();
-
-        // count graphemes instead of string length (otherwise emojis mess p)
+        var rendered = GameRenderer.Render(game);
         var renderedWithoutNewlines = rendered.Replace("\r", "").Replace("\n", "");
 
+        // Count graphemes instead of string length to account for emojis 
         Assert.Equal(8 * 8, new StringInfo(renderedWithoutNewlines).LengthInTextElements);
     }
 
@@ -22,7 +22,7 @@ public class GameInstanceTests
     public void Constructor_InitializesRemainingCellsAsEmpty()
     {
         var game = new GameInstance(new GameConfig(8, "Player1"), new Random(42));
-        var rendered = game.Render();
+        var rendered = GameRenderer.Render(game);
 
         var emptyCount = 0;
         var charEnum = StringInfo.GetTextElementEnumerator(rendered);
@@ -36,7 +36,7 @@ public class GameInstanceTests
             }
         }
 
-        // one is a player, one is food
+        // Taking away 2 representing food and player
         Assert.Equal(8 * 8 - 2, emptyCount);
     }
 
@@ -60,7 +60,7 @@ public class GameInstanceTests
     public void Render_OutputHasCorrectRowCount()
     {
         var game = new GameInstance(new GameConfig(8, "Player1"), new Random(42));
-        var renderedWithoutNewlines = new string([.. game.Render().Where(c => c != '\r' && c != '\n')]);
+        var renderedWithoutNewlines = new string([.. GameRenderer.Render(game).Where(c => c != '\r' && c != '\n')]);
 
         var length = new StringInfo(renderedWithoutNewlines).LengthInTextElements;
 
@@ -78,7 +78,7 @@ public class GameInstanceTests
         var newHead = game.Body.First.Value;
         Assert.NotEqual(initialHead, newHead);
 
-        // default direction is right
+        // The default initial movement direction is Right
         Assert.Equal(initialHead.x + 1, newHead.x);
         Assert.Equal(initialHead.y, newHead.y);
     }
@@ -95,7 +95,7 @@ public class GameInstanceTests
 
         Assert.True(game.Active);
 
-        game.Tick(); // RIP
+        game.Tick(); // Force cell collision to trigger game over
 
         Assert.False(game.Active);
     }
@@ -105,7 +105,7 @@ public class GameInstanceTests
     {
         var game = new GameInstance(new GameConfig(8, "Player1"), new Random(42));
 
-        // try moving left, when moving Right (should be ignored)
+        // Try moving Left while moving Right (should fail)
         game.Tick(MoveDirection.Left);
 
         Assert.Equal(MoveDirection.Right, game.Direction);
@@ -128,7 +128,7 @@ public class GameInstanceTests
         var eventRaised = false;
         game.GameOver += (g) => eventRaised = true;
 
-        // force crash into wall
+        // Run into wall
         for (int i = 0; i < game.Config.GridSize; i++)
         {
             game.Tick();
@@ -143,7 +143,7 @@ public class GameInstanceTests
         var game = new GameInstance(new GameConfig(8, "Player1"), new Random(42));
         var initialHead = game.Body.First!.Value;
 
-        // force crash into wall
+        // Run into wall
         for (int i = 0; i < game.Config.GridSize; i++)
         {
             game.Tick();
@@ -153,7 +153,7 @@ public class GameInstanceTests
 
         var headAfterCrash = game.Body.First!.Value;
 
-        // try Tick again
+        // Additional Tick after game ended
         game.Tick();
 
         var headAfterInactiveTick = game.Body.First.Value;

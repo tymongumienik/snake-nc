@@ -1,6 +1,5 @@
 using Snake.Application.Core;
 using Snake.Application.Models;
-using Snake.Application.Repositories;
 using Snake.Tests.Helpers;
 
 namespace Snake.Tests;
@@ -96,7 +95,7 @@ public class GameManagerTests
         var repository = new TestDataRepository();
         var manager = new GameManager(repository);
 
-        // Should not throw
+        // Verify that attempting to end a non-existent game does not throw an exception.
         manager.EndGame(Guid.NewGuid());
 
         Assert.Empty(repository.SavedResults);
