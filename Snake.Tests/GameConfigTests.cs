@@ -27,7 +27,7 @@ public class GameConfigTests
     {
         var config = new GameConfig(userName: "Player1", gridSize: 8);
         Assert.Equal("Player1", config.UserName);
-        Assert.Equal((uint)8, config.GridSize);
+        Assert.Equal(8u, config.GridSize);
     }
 
     [Fact]
