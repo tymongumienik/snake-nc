@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Snake.Application.Core;
@@ -14,7 +15,7 @@ internal class Program
     static async Task Main()
     {
         var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<SnakeDbContext>()
+            .AddUserSecrets(Assembly.GetExecutingAssembly())
             .Build();
 
         var connectionString = configuration.GetConnectionString("SnakeDb");
