@@ -33,7 +33,7 @@ public class ScreenComposer
 
     private string ComposeGameplay(ClientSession session)
     {
-        return GameRenderer.Render(session.GameInstance!) + $"\r\nScore: {session.GameInstance!.Score}\r\nPress WASD or arrow keys to move";
+        return GameRenderer.Render(session.GameInstance!) + $"\r\nScore: {session.GameInstance!.Score}\r\nPress WSAD to move";
     }
 
     private string ComposeGameOver(ClientSession session)
