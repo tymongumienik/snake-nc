@@ -4,8 +4,6 @@
   <p>A classic Snake game implemented in clean and modern C#, playable over raw TCP sockets!</p>
 </div>
 
-This game doesn't require any client to play - simply start the server and enjoy the game using `netcat`!
-
 <img src=".assets/demo.gif" alt="Demo" width="250" />
 
 ## Features
