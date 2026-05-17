@@ -2,9 +2,8 @@
   <img src=".assets/logo.png" alt="Logo" width="250" />
   <h1>snake-nc</h1>
   <p>A classic Snake game implemented in clean and modern C#, playable over raw TCP sockets!</p>
+  <img src=".assets/demo.gif" alt="Demo" width="250" />
 </div>
-
-<img src=".assets/demo.gif" alt="Demo" width="250" />
 
 ## Features
 - **Concurrency**: Hosts multiple independent game sessions at the same time, with async request handling.
